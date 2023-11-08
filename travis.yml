@@ -1,0 +1,118 @@
+language: python
+
+python:
+  - "3.7"
+  - "3.8"
+  - "3.9"
+  - "3.10"
+  - "3.11"
+
+install:
+  - pip install poetry
+  - poetry install
+
+jobs:
+  include:
+    - name: "Unit Tests"
+      script:
+        - poetry run pytest --cov=strawberry --cov-report=xml -m "not django" -m "not starlette" -m "not starlite" --ignore=tests/mypy --ignore=tests/pyright
+      
+    - name: "Unit Tests on Windows"
+      os: windows
+      language: shell      
+      before_install:
+        - choco install python --version 3.10.0
+        - python -m pip install --upgrade pip
+      env:
+        - PATH=/c/Python310:/c/Python310/Scripts:$PATH
+      install:
+        - pip install poetry
+        - poetry install
+      script:
+        - poetry run pytest --cov=strawberry --cov-report=xml -m "not django" --ignore=tests/mypy --ignore=tests/pyright
+
+    - name: "Django Tests"
+      python: "3.10"
+      env:
+        - DJANGO=4.0
+      install:
+        - pip install poetry
+        - poetry install
+        - poetry add django@^$DJANGO
+      script:
+        - poetry run pytest --cov=strawberry -m django
+
+    - name: "Django 3.2 Tests"  
+      python: "3.10"
+      env:
+        - DJANGO=3.2
+      install:
+        - pip install poetry  
+        - poetry install
+        - poetry add django@^$DJANGO
+      script:
+        - poetry run pytest --cov=strawberry -m django
+    
+    - name: "Starlette Tests"
+      python: "3.10"  
+      env:
+        - STARLETTE=0.23.1
+      install:
+        - pip install poetry
+        - poetry install
+        - poetry run pip install starlette==$STARLETTE
+        - poetry run pip install "fastapi<0.92.0"
+      script:
+        - poetry run pytest --cov=strawberry -m starlette
+
+    - name: "Starlette 0.24 Tests"
+      python: "3.10"
+      env: 
+        - STARLETTE=0.24.0
+      install:
+        - pip install poetry
+        - poetry install
+        - poetry run pip install starlette==$STARLETTE
+        - poetry run pip install "fastapi<0.92.0"
+      script:
+        - poetry run pytest --cov=strawberry -m starlette
+    
+    - name: "Starlette 0.25 Tests"
+      python: "3.10"
+      env:
+        - STARLETTE=0.25.0  
+      install:
+        - pip install poetry
+        - poetry install
+        - poetry run pip install starlette==$STARLETTE
+        - poetry run pip install "fastapi==0.92.0"
+      script:
+        - poetry run pytest --cov=strawberry -m starlette
+
+    - name: "Starlette 0.26 Tests"
+      python: "3.10"
+      env:
+        - STARLETTE=0.26.1
+      install:
+        - pip install poetry
+        - poetry install
+        - poetry run pip install starlette==$STARLETTE
+      script:
+        - poetry run pytest --cov=strawberry -m starlette
+
+    - name: "Starlite Tests"
+      python:
+        - "3.8"
+        - "3.9"
+        - "3.10"
+        - "3.11"
+      install:
+        - pip install poetry
+        - poetry install 
+      script:
+        - poetry run coverage run -m pytest -m starlite
+      after_success:
+        - poetry run coverage xml -i
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
